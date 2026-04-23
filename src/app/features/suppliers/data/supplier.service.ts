@@ -47,6 +47,12 @@ export class SupplierService {
     );
   }
 
+  getActiveSuppliers(): Observable<ApiResponse<Array<{ id: number; business_name: string }>>> {
+    return this.http.get<ApiResponse<Array<{ id: number; business_name: string }>>>(
+      `${this.apiUrl}/suppliers/active/list`
+    );
+  }
+
   createSupplier(payload: SupplierPayload): Observable<ApiResponse<Supplier>> {
     return this.http.post<ApiResponse<Supplier>>(
       `${this.apiUrl}/suppliers`,

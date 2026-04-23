@@ -1,3 +1,307 @@
-<p-card header="raw-materials">
-      <p>Bienvenido al raw-materials.</p>
-    </p-card>
+<section class="raw-materials-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Materias primas</h2>
+      <p>Gestiona las materias primas del sistema.</p>
+    </div>
+
+    <p-button
+      label="Nueva materia prima"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por nombre o código"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="material_type_filter">Tipo de material</label>
+        <input
+          id="material_type_filter"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Ej. Insumo, Empaque"
+          [ngModel]="materialTypeFilter()"
+          (ngModelChange)="onMaterialTypeFilterChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="rawMaterials()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Unidad</th>
+          <th>Costo/U.</th>
+          <th>Stock mín.</th>
+          <th>Proveedor</th>
+          <th>Estado</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-rawMaterial>
+        <tr>
+          <td class="strong">{{ rawMaterial.code }}</td>
+          <td>{{ rawMaterial.name }}</td>
+          <td>{{ rawMaterial.material_type }}</td>
+          <td>{{ rawMaterial.unit_measure }}</td>
+          <td>{{ rawMaterial.cost_per_unit }}</td>
+          <td>{{ rawMaterial.minimum_stock || '-' }}</td>
+          <td>{{ rawMaterial.supplier?.business_name || '-' }}</td>
+          <td>
+            @if (rawMaterial.status) {
+              <p-tag value="Activa" severity="success" />
+            } @else {
+              <p-tag value="Inactiva" severity="danger" />
+            }
+          </td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openEditDialog(rawMaterial)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (onClick)="deleteRawMaterial(rawMaterial)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              No se encontraron materias primas.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '48rem', maxWidth: '96vw' }"
+    [header]="isEditMode ? 'Editar materia prima' : 'Nueva materia prima'"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="form-grid">
+        <div class="field">
+          <label for="code">Código</label>
+          <input
+            id="code"
+            type="text"
+            pInputText
+            formControlName="code"
+            class="w-full"
+            placeholder="Código"
+          />
+          @if (codeControl.touched && codeControl.invalid) {
+            <small class="field-error">El código es obligatorio.</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="supplier_id">Proveedor</label>
+          <select
+            id="supplier_id"
+            class="native-select"
+            formControlName="supplier_id"
+          >
+            <option [ngValue]="null">Sin proveedor</option>
+            @for (supplier of supplierOptions(); track supplier.id) {
+              <option [ngValue]="supplier.id">{{ supplier.business_name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="name">Nombre</label>
+        <input
+          id="name"
+          type="text"
+          pInputText
+          formControlName="name"
+          class="w-full"
+          placeholder="Nombre de la materia prima"
+        />
+        @if (nameControl.touched && nameControl.invalid) {
+          <small class="field-error">El nombre es obligatorio.</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="description">Descripción</label>
+        <textarea
+          id="description"
+          pTextarea
+          rows="3"
+          formControlName="description"
+          class="w-full"
+          placeholder="Descripción opcional"
+        ></textarea>
+      </div>
+
+      <div class="form-grid form-grid-3">
+        <div class="field">
+          <label for="material_type">material_type</label>
+          <input
+            id="material_type"
+            type="text"
+            pInputText
+            formControlName="material_type"
+            class="w-full"
+            placeholder="Ej. Insumo"
+          />
+          @if (materialTypeControl.touched && materialTypeControl.invalid) {
+            <small class="field-error">El tipo es obligatorio.</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="unit_measure">unit_measure</label>
+          <input
+            id="unit_measure"
+            type="text"
+            pInputText
+            formControlName="unit_measure"
+            class="w-full"
+            placeholder="Ej. kg, lt, unidad"
+          />
+          @if (unitMeasureControl.touched && unitMeasureControl.invalid) {
+            <small class="field-error">La unidad es obligatoria.</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="cost_per_unit">cost_per_unit</label>
+          <input
+            id="cost_per_unit"
+            type="number"
+            pInputText
+            formControlName="cost_per_unit"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="minimum_stock">minimum_stock</label>
+          <input
+            id="minimum_stock"
+            type="number"
+            pInputText
+            formControlName="minimum_stock"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="expiration_date">expiration_date</label>
+          <input
+            id="expiration_date"
+            type="date"
+            pInputText
+            formControlName="expiration_date"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="checkbox-field">
+        <p-checkbox
+          inputId="status"
+          formControlName="status"
+          [binary]="true"
+        />
+        <label for="status">Materia prima activa</label>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</section>
