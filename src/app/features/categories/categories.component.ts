@@ -20,6 +20,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
+import { ConfirmService } from '../../core/services/confirm.service';
 
 import {
   Category,
@@ -45,7 +46,8 @@ import { NotificationService } from '../../core/services/notification.service';
     InputTextModule,
     CheckboxModule,
     TagModule,
-    TextareaModule
+    TextareaModule,
+
   ],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss',
@@ -55,6 +57,7 @@ export class CategoriesComponent {
   private readonly categoryService = inject(CategoryService);
   private readonly notificationService = inject(NotificationService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly confirmService = inject(ConfirmService);
 
   readonly categories = signal<Category[]>([]);
   readonly loading = signal(false);
@@ -220,32 +223,31 @@ export class CategoriesComponent {
       });
   }
 
-  deleteCategory(category: Category): void {
-    const confirmed = window.confirm(
-      `¿Deseas eliminar la categoría "${category.name}"?`
-    );
+ deleteCategory(category: Category): void {
+  this.confirmService.confirmDelete({
+    message: `¿Deseas eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`,
+    accept: () => {
+      this.loading.set(true);
 
-    if (!confirmed) return;
-
-    this.loading.set(true);
-
-    this.categoryService
-      .deleteCategory(category.id)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
-        next: (response) => {
-          this.notificationService.success(
-            'Categoría eliminada',
-            response.message
-          );
-          this.loadCategories(this.currentPage());
-        },
-        error: (error) => {
-          this.notificationService.error(
-            'Error al eliminar',
-            error?.error?.message ?? 'No fue posible eliminar la categoría.'
-          );
-        }
-      });
-  }
+      this.categoryService
+        .deleteCategory(category.id)
+        .pipe(finalize(() => this.loading.set(false)))
+        .subscribe({
+          next: (response) => {
+            this.notificationService.success(
+              'Categoría eliminada',
+              response.message
+            );
+            this.loadCategories(this.currentPage());
+          },
+          error: (error) => {
+            this.notificationService.error(
+              'Error al eliminar',
+              error?.error?.message ?? 'No fue posible eliminar la categoría.'
+            );
+          }
+        });
+    }
+  });
+}
 }

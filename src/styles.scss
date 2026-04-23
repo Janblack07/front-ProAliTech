@@ -155,3 +155,81 @@ body {
   margin-top: 0.25rem !important;
   line-height: 1.4;
 }
+/* ConfirmDialog global */
+.p-confirm-dialog {
+  border-radius: 1.25rem !important;
+  overflow: hidden;
+  box-shadow: var(--app-card-shadow) !important;
+  background: var(--app-bg) !important;
+  border: 1px solid var(--app-card-border) !important;
+}
+
+.p-confirm-dialog .p-dialog-header,
+.p-confirm-dialog .p-dialog-content,
+.p-confirm-dialog .p-dialog-footer {
+  background: var(--app-bg) !important;
+  color: var(--app-text) !important;
+}
+
+.p-confirm-dialog .p-dialog-header {
+  border-bottom: 1px solid var(--app-card-border) !important;
+  padding: 1rem 1.25rem !important;
+}
+
+.p-confirm-dialog .p-dialog-title {
+  color: var(--app-card-text) !important;
+  font-weight: 700 !important;
+}
+
+.p-confirm-dialog .p-dialog-header-icon {
+  color: var(--app-card-muted) !important;
+}
+
+.p-confirm-dialog .p-dialog-header-icon:hover {
+  background: var(--app-hover) !important;
+  color: var(--app-card-text) !important;
+}
+
+.p-confirm-dialog .p-dialog-content {
+  padding: 1.25rem !important;
+}
+
+.p-confirm-dialog .p-dialog-footer {
+  border-top: 1px solid var(--app-card-border) !important;
+  padding: 1rem 1.25rem !important;
+}
+
+.p-confirm-dialog .p-confirm-dialog-message {
+  color: var(--app-card-text) !important;
+  line-height: 1.5;
+}
+
+.p-confirm-dialog .p-confirm-dialog-icon {
+  color: #f59e0b !important;
+  font-size: 1.5rem !important;
+}
+
+/* Botón cancelar */
+.p-confirm-dialog .p-confirm-dialog-reject.p-button {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--app-card-text) !important;
+  border-radius: 0.85rem !important;
+}
+
+.p-confirm-dialog .p-confirm-dialog-reject.p-button:hover {
+  background: var(--app-hover) !important;
+}
+
+/* Botón aceptar eliminar */
+.p-confirm-dialog .p-confirm-dialog-accept.p-button {
+  background: #ef4444 !important;
+  border: 1px solid #ef4444 !important;
+  color: #ffffff !important;
+  border-radius: 0.85rem !important;
+}
+
+.p-confirm-dialog .p-confirm-dialog-accept.p-button:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
