@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AuthStore } from './core/stores/auth.store';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -8,4 +10,12 @@ import { RouterOutlet } from '@angular/router';
   template: `<router-outlet />`,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class App {}
+export class App implements OnInit {
+  private readonly authStore = inject(AuthStore);
+  private readonly themeService = inject(ThemeService);
+
+  ngOnInit(): void {
+    this.themeService.initializeTheme();
+    this.authStore.loadMe().subscribe();
+  }
+}

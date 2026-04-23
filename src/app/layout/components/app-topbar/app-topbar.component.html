@@ -3,13 +3,29 @@
     <p-button
       icon="pi pi-bars"
       [text]="true"
-      severity="contrast"
+      styleClass="topbar-menu-button"
       (onClick)="onToggleMenu()"
     />
     <h1 class="layout-title">ProAliTech</h1>
   </div>
 
   <div class="layout-topbar-right">
-    <span class="layout-user">Sistema Administrativo Alimenticio</span>
+    <button
+      type="button"
+      pButton
+      pRipple
+      class="theme-toggle-button"
+      [icon]="themeService.theme() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"
+      (click)="onToggleTheme()"
+      severity="secondary"
+    ></button>
+
+    <p-button
+      label="Salir"
+      icon="pi pi-sign-out"
+      severity="danger"
+      [outlined]="true"
+      (onClick)="onLogout()"
+    />
   </div>
 </header>

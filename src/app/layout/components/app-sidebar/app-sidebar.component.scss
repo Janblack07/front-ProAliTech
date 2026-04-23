@@ -1,7 +1,7 @@
 .layout-sidebar {
   width: 16rem;
-  background: var(--surface-card);
-  border-right: 1px solid var(--surface-border);
+  background: var(--app-bg);
+  border-right: 2px solid var(--app-border);
   padding: 1rem 0.75rem;
   transition: width 0.2s ease;
 }

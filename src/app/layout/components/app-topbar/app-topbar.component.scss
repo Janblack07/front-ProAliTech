@@ -11,7 +11,8 @@
   z-index: 1000;
 }
 
-.layout-topbar-left {
+.layout-topbar-left,
+.layout-topbar-right {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -21,9 +22,4 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
-}
-
-.layout-user {
-  font-size: 0.95rem;
-  color: var(--text-color-secondary);
 }

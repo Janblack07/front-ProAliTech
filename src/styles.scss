@@ -1,20 +1,133 @@
-/* You can add global styles to this file, and also import other style files */
 @import 'primeicons/primeicons.css';
 @import 'primeflex/primeflex.css';
 
+html {
+  font-size: 14px;
+}
+
 html,
 body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: Inter, sans-serif;
   margin: 0;
   padding: 0;
-  min-height: 100%;
-  font-family: Inter, sans-serif;
-  background: #f8fafc;
+  background: var(--app-bg);
+  color: var(--app-text);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
 }
 
 * {
   box-sizing: border-box;
 }
 
-a {
-  color: inherit;
+/* =========================
+   TOKENS GLOBALES - LIGHT
+   ========================= */
+:root {
+  --app-bg: #f5f7fb;
+  --app-text: #0f172a;
+  --app-text-muted: #64748b;
+
+  --app-surface: #ffffff;
+  --app-surface-2: #f8fafc;
+  --app-surface-3: #eef2f7;
+
+  --app-border: #e2e8f0;
+  --app-hover: #f1f5f9;
+
+  --app-primary: #10b981;
+  --app-primary-contrast: #ffffff;
+
+  --app-topbar-bg: #ffffff;
+  --app-topbar-text: #0f172a;
+  --app-sidebar-bg: #ffffff;
+  --app-sidebar-text: #0f172a;
+  --app-sidebar-active-bg: #ecfdf5;
+  --app-sidebar-active-text: #047857;
+
+  --app-card-bg: #ffffff;
+  --app-card-text: #0f172a;
+  --app-card-muted: #64748b;
+  --app-card-border: #e2e8f0;
+  --app-card-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+
+  --app-icon-button-bg: #ffffff;
+  --app-icon-button-text: #334155;
+  --app-icon-button-border: #dbe2ea;
+  --app-icon-button-hover: #f8fafc;
+
+  --app-content-bg: #f5f7fb;
+}
+
+/* =========================
+   TOKENS GLOBALES - DARK
+   ========================= */
+:root.app-dark {
+  --app-bg: #071226;
+  --app-text: #f8fafc;
+  --app-text-muted: #94a3b8;
+
+  --app-surface: #0f172a;
+  --app-surface-2: #111827;
+  --app-surface-3: #1e293b;
+
+  --app-border: rgba(148, 163, 184, 0.16);
+  --app-hover: rgba(255, 255, 255, 0.06);
+
+  --app-primary: #34d399;
+  --app-primary-contrast: #052e16;
+
+  --app-topbar-bg: #071a3a;
+  --app-topbar-text: #f8fafc;
+  --app-sidebar-bg: #071a3a;
+  --app-sidebar-text: #f8fafc;
+  --app-sidebar-active-bg: rgba(52, 211, 153, 0.14);
+  --app-sidebar-active-text: #a7f3d0;
+
+  --app-card-bg: #071a3a;
+  --app-card-text: #f8fafc;
+  --app-card-muted: #94a3b8;
+  --app-card-border: rgba(148, 163, 184, 0.14);
+  --app-card-shadow: 0 14px 35px rgba(0, 0, 0, 0.35);
+
+  --app-icon-button-bg: #111827;
+  --app-icon-button-text: #f8fafc;
+  --app-icon-button-border: rgba(255, 255, 255, 0.12);
+  --app-icon-button-hover: #1f2937;
+
+  --app-content-bg: #071226;
+}
+
+/* Compatibilidad con clases ya usadas */
+.surface-ground {
+  background: var(--app-bg) !important;
+  color: var(--app-text) !important;
+}
+
+/* Clase reutilizable para cards del sistema */
+.app-card {
+  background: var(--app-card-bg);
+  color: var(--app-card-text);
+  border: 1px solid var(--app-card-border);
+  border-radius: 1.25rem;
+  box-shadow: var(--app-card-shadow);
+}
+
+/* PrimeNG card por si la usas */
+.p-card {
+  background: var(--app-card-bg) !important;
+  color: var(--app-card-text) !important;
+  border: 1px solid var(--app-card-border) !important;
+  box-shadow: var(--app-card-shadow) !important;
+}
+
+.p-card .p-card-subtitle {
+  color: var(--app-card-muted) !important;
 }
