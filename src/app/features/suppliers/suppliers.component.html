@@ -1,3 +1,242 @@
-<p-card header="Suppliers">
-      <p>Bienvenido al Suppliers.</p>
-    </p-card>
+<section class="suppliers-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Proveedores</h2>
+      <p>Gestiona los proveedores del sistema.</p>
+    </div>
+
+    <p-button
+      label="Nuevo proveedor"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por nombre, correo o documento"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="statusFilter">Estado</label>
+        <select
+          id="statusFilter"
+          class="native-select"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+        >
+          <option value="all">Todos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="suppliers()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre</th>
+          <th>Documento</th>
+          <th>Teléfono</th>
+          <th>Correo</th>
+          <th>Estado</th>
+          <th>Creado</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-supplier>
+        <tr>
+          <td class="strong">{{ supplier.business_name }}</td>
+          <td>{{ supplier.ruc || '-' }}</td>
+          <td>{{ supplier.phone || '-' }}</td>
+          <td>{{ supplier.email || '-' }}</td>
+          <td>
+            @if (supplier.status) {
+              <p-tag value="Activo" severity="success" />
+            } @else {
+              <p-tag value="Inactivo" severity="danger" />
+            }
+          </td>
+          <td>{{ supplier.created_at | date:'mediumDate' }}</td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openEditDialog(supplier)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (onClick)="deleteSupplier(supplier)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              No se encontraron proveedores.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '40rem', maxWidth: '95vw' }"
+    [header]="isEditMode ? 'Editar proveedor' : 'Nuevo proveedor'"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="field">
+        <label for="name">Nombre</label>
+        <input
+          id="business_name"
+          type="text"
+          pInputText
+          formControlName="business_name"
+          class="w-full"
+          placeholder="Nombre del proveedor"
+        />
+        @if (business_nameControl.touched && business_nameControl.invalid) {
+          <small class="field-error">El nombre es obligatorio.</small>
+        }
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="document">Documento / RUC</label>
+          <input
+            id="ruc"
+            type="text"
+            pInputText
+            formControlName="ruc"
+            class="w-full"
+            placeholder="Documento o RUC"
+          />
+        </div>
+
+        <div class="field">
+          <label for="phone">Teléfono</label>
+          <input
+            id="phone"
+            type="text"
+            pInputText
+            formControlName="phone"
+            class="w-full"
+            placeholder="Teléfono"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Correo</label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          formControlName="email"
+          class="w-full"
+          placeholder="correo@proveedor.com"
+        />
+        @if (emailControl.touched && emailControl.invalid) {
+          <small class="field-error">Ingresa un correo válido.</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="address">Dirección</label>
+        <textarea
+          id="address"
+          pTextarea
+          rows="3"
+          formControlName="address"
+          class="w-full"
+          placeholder="Dirección del proveedor"
+        ></textarea>
+      </div>
+
+      <div class="checkbox-field">
+        <p-checkbox
+          inputId="status"
+          formControlName="status"
+          [binary]="true"
+        />
+        <label for="status">Proveedor activo</label>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</section>
