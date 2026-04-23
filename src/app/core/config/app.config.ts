@@ -4,6 +4,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 import { providePrimeNG } from 'primeng/config';
+import { MessageService } from 'primeng/api';
 import Aura from '@primeuix/themes/aura';
 
 import { routes } from '../../app.routes';
@@ -26,6 +27,7 @@ export const appConfig: ApplicationConfig = {
         preset: Aura
       },
       ripple: true
-    })
+    }),
+    MessageService
   ]
 };

@@ -42,7 +42,7 @@ body {
   --app-border: #e2e8f0;
   --app-hover: #f1f5f9;
 
-  --app-primary: #10b981;
+  --app-primary: #1059b9;
   --app-primary-contrast: #ffffff;
 
   --app-topbar-bg: #ffffff;
@@ -130,4 +130,28 @@ body {
 
 .p-card .p-card-subtitle {
   color: var(--app-card-muted) !important;
+}
+
+
+/* Toast global */
+.p-toast {
+  z-index: 2000 !important;
+}
+
+.p-toast .p-toast-message {
+  border-radius: 1rem !important;
+  box-shadow: var(--app-card-shadow) !important;
+}
+
+.p-toast .p-toast-message-content {
+  align-items: flex-start !important;
+}
+
+.p-toast .p-toast-summary {
+  font-weight: 700 !important;
+}
+
+.p-toast .p-toast-detail {
+  margin-top: 0.25rem !important;
+  line-height: 1.4;
 }

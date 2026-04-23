@@ -1,3 +1,197 @@
-<p-card header="categories">
-      <p>Bienvenido al categories.</p>
-    </p-card>
+<section class="categories-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Categorías</h2>
+      <p>Gestiona las categorías de productos del sistema.</p>
+    </div>
+
+    <p-button
+      label="Nueva categoría"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por nombre"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="statusFilter">Estado</label>
+        <select
+          id="statusFilter"
+          class="native-select"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+        >
+          <option value="all">Todos</option>
+          <option value="active">Activas</option>
+          <option value="inactive">Inactivas</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--primary"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="categories()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Estado</th>
+          <th>Creada</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-category>
+        <tr>
+          <td class="strong">{{ category.name }}</td>
+          <td>{{ category.description || 'Sin descripción' }}</td>
+          <td>
+            @if (category.status) {
+              <p-tag value="Activa" severity="success" />
+            } @else {
+              <p-tag value="Inactiva" severity="danger" />
+            }
+          </td>
+          <td>{{ category.created_at | date:'mediumDate' }}</td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openEditDialog(category)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (onClick)="deleteCategory(category)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              No se encontraron categorías.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '34rem', maxWidth: '95vw' }"
+    [header]="isEditMode ? 'Editar categoría' : 'Nueva categoría'"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="field">
+        <label for="name">Nombre</label>
+        <input
+          id="name"
+          type="text"
+          pInputText
+          formControlName="name"
+          class="w-full"
+          placeholder="Ej. Lácteos"
+        />
+        @if (nameControl.touched && nameControl.invalid) {
+          <small class="field-error">El nombre es obligatorio.</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="description">Descripción</label>
+        <textarea
+          id="description"
+          pTextarea
+          rows="4"
+          formControlName="description"
+          class="w-full"
+          placeholder="Descripción opcional"
+        ></textarea>
+      </div>
+
+      <div class="checkbox-field">
+        <p-checkbox
+          inputId="status"
+          formControlName="status"
+          [binary]="true"
+        />
+        <label for="status">Categoría activa</label>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</section>
