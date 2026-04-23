@@ -1,0 +1,16 @@
+<aside class="layout-sidebar" [ngClass]="{ collapsed: collapsed() }">
+  <nav class="menu-list">
+    @for (item of menuItems; track item.route) {
+      <a
+        class="menu-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+      >
+        <i [class]="item.icon"></i>
+        @if (!collapsed()) {
+          <span>{{ item.label }}</span>
+        }
+      </a>
+    }
+  </nav>
+</aside>

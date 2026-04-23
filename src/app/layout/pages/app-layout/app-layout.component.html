@@ -1,0 +1,11 @@
+<div class="layout-wrapper" [ngClass]="{ 'layout-collapsed': sidebarCollapsed() }">
+  <app-topbar (menuToggle)="toggleSidebar()" />
+
+  <div class="layout-container">
+    <app-sidebar [collapsed]="sidebarCollapsed()" />
+
+    <main class="layout-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

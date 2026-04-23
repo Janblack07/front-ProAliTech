@@ -1,0 +1,22 @@
+.layout-wrapper {
+  min-height: 100vh;
+  background: var(--surface-ground);
+  color: var(--text-color);
+}
+
+.layout-container {
+  display: flex;
+  min-height: calc(100vh - 4rem);
+}
+
+.layout-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow: auto;
+}
+
+.layout-collapsed {
+  .layout-sidebar {
+    width: 5rem;
+  }
+}

@@ -1,0 +1,11 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: var(--surface-ground);
+}
+
+:host ::ng-deep .p-card {
+  width: min(100%, 26rem);
+}
