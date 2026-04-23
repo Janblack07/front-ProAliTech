@@ -16,6 +16,13 @@ export const APP_LAYOUT_ROUTES: Routes = [
           )
       },
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('../../../features/profile/profile.component').then(
+            (m) => m.ProfileComponent
+          )
+      },
+      {
         path: 'users',
         loadComponent: () =>
           import('../../../features/users/users.component').then(

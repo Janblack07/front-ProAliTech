@@ -18,6 +18,7 @@ export class AppSidebarComponent {
   readonly menuItems: AppMenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/app/dashboard' },
     { label: 'Usuarios', icon: 'pi pi-users', route: '/app/users' },
+    { label: 'Mi perfil', icon: 'pi pi-user', route: '/app/profile' },
     { label: 'Categorías', icon: 'pi pi-tags', route: '/app/categories' },
     { label: 'Proveedores', icon: 'pi pi-truck', route: '/app/suppliers' },
     { label: 'Materias primas', icon: 'pi pi-box', route: '/app/raw-materials' },

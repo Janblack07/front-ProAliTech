@@ -1,0 +1,90 @@
+<section class="profile-page">
+  <div class="profile-header app-card">
+    <div class="profile-avatar">
+      @if (user()?.name; as name) {
+        <span>{{ name.charAt(0).toUpperCase() }}</span>
+      } @else {
+        <span>U</span>
+      }
+    </div>
+
+    <div class="profile-header-info">
+      <h2>{{ user()?.name || 'Usuario' }}</h2>
+      <p>{{ user()?.email || 'Sin correo disponible' }}</p>
+    </div>
+  </div>
+
+  <div class="profile-grid">
+    <div class="app-card profile-card">
+      <h3>Información general</h3>
+
+      <div class="info-list">
+        <div class="info-item">
+          <span class="label">ID</span>
+          <span class="value">{{ user()?.id ?? '-' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Nombre</span>
+          <span class="value">{{ user()?.name ?? '-' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Correo</span>
+          <span class="value">{{ user()?.email ?? '-' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Estado</span>
+          <span class="value">
+            @if (user()?.status === true || user()?.status === 1) {
+              Activo
+            } @else if (user()?.status === false || user()?.status === 0) {
+              Inactivo
+            } @else {
+              No definido
+            }
+          </span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Último acceso</span>
+          <span class="value">
+            {{ user()?.last_login_at ? (user()?.last_login_at | date:'medium') : '-' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card profile-card">
+      <h3>Roles</h3>
+
+      <div class="chips">
+        @if (roles().length > 0) {
+          @for (role of roles(); track role) {
+            <p-tag [value]="role" severity="success" />
+          }
+        } @else {
+          <span class="empty-text">No hay roles asignados.</span>
+        }
+      </div>
+    </div>
+
+    <div class="app-card profile-card full-width">
+      <h3>Permisos</h3>
+
+      <div class="permissions-list">
+        @if (permissions().length > 0) {
+          @for (permission of permissions(); track permission) {
+            <div class="permission-item">
+              <i class="pi pi-check-circle"></i>
+              <span>{{ permission }}</span>
+            </div>
+          }
+        } @else {
+          <span class="empty-text">No hay permisos disponibles.</span>
+        }
+      </div>
+    </div>
+  </div>
+</section>
