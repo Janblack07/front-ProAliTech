@@ -1,3 +1,327 @@
-<p-card header="inventory">
-      <p>Bienvenido al inventory.</p>
-    </p-card>
+<section class="inventory-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Inventario</h2>
+      <p>Controla existencias, stock mínimo y movimientos.</p>
+    </div>
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por nombre o código"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="inventory_type_filter">inventory_type</label>
+        <select
+          id="inventory_type_filter"
+          class="native-select"
+          [ngModel]="inventoryTypeFilter()"
+          (ngModelChange)="onInventoryTypeFilterChange($event)"
+        >
+          <option value="all">Todos</option>
+          <option value="product">product</option>
+          <option value="raw_material">raw_material</option>
+        </select>
+      </div>
+
+      <div class="field checkbox-field checkbox-filter">
+        <label for="low_stock">low_stock</label>
+        <p-checkbox
+          inputId="low_stock"
+          [binary]="true"
+          [ngModel]="lowStockFilter()"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="onLowStockFilterChange($event)"
+        />
+
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="inventories()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Imagen</th>
+          <th>Ítem</th>
+          <th>Tipo</th>
+          <th>Stock actual</th>
+          <th>Unidad</th>
+          <th>Stock mínimo</th>
+          <th>low_stock</th>
+          <th>Último movimiento</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-inventory>
+        <tr>
+          <td>
+            @if (inventory.item?.image_url) {
+              <img
+                [src]="inventory.item?.image_url"
+                [alt]="inventory.item?.name || 'Imagen'"
+                class="inventory-thumb"
+              />
+            } @else {
+              <div class="inventory-thumb placeholder">
+                <i class="pi pi-image"></i>
+              </div>
+            }
+          </td>
+          <td class="strong">
+            {{ inventory.item?.name || '-' }}
+            <div class="item-code">{{ inventory.item?.code || '-' }}</div>
+          </td>
+          <td>{{ getInventoryTypeLabel(inventory.inventory_type) }}</td>
+          <td>{{ inventory.current_stock }}</td>
+          <td>{{ inventory.unit_measure }}</td>
+          <td>{{ inventory.minimum_stock }}</td>
+          <td>
+            @if (inventory.is_low_stock) {
+              <p-tag value="Sí" severity="danger" />
+            } @else {
+              <p-tag value="No" severity="success" />
+            }
+          </td>
+          <td>{{ inventory.last_movement_at || '-' }}</td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openDetailDialog(inventory)"
+              />
+              <p-button
+                icon="pi pi-history"
+                [rounded]="true"
+                [text]="true"
+                severity="contrast"
+                (onClick)="openMovementsDialog(inventory)"
+              />
+              <p-button
+                icon="pi pi-sliders-h"
+                [rounded]="true"
+                [text]="true"
+                severity="warn"
+                (onClick)="openAdjustDialog(inventory)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              No se encontraron registros de inventario.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="detailDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '40rem', maxWidth: '96vw' }"
+    [header]="'Detalle de inventario'"
+    styleClass="app-dialog"
+    (onHide)="closeDetailDialog()"
+  >
+    @if (selectedInventory(); as inventory) {
+      <div class="view-grid">
+        <div class="app-card view-card">
+          <h3>Información general</h3>
+          <p><strong>Ítem:</strong> {{ inventory.item?.name || '-' }}</p>
+          <p><strong>Código:</strong> {{ inventory.item?.code || '-' }}</p>
+          <p><strong>inventory_type:</strong> {{ inventory.inventory_type }}</p>
+          <p><strong>current_stock:</strong> {{ inventory.current_stock }}</p>
+          <p><strong>unit_measure:</strong> {{ inventory.unit_measure }}</p>
+          <p><strong>minimum_stock:</strong> {{ inventory.minimum_stock }}</p>
+        </div>
+
+        <div class="app-card view-card">
+          <h3>Estado</h3>
+          <p><strong>is_low_stock:</strong> {{ inventory.is_low_stock ? 'true' : 'false' }}</p>
+          <p><strong>last_movement_at:</strong> {{ inventory.last_movement_at || '-' }}</p>
+          <p><strong>created_at:</strong> {{ inventory.created_at }}</p>
+        </div>
+      </div>
+    }
+  </p-dialog>
+
+  <p-dialog
+    [visible]="movementsDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '78rem', maxWidth: '98vw' }"
+    [header]="'Movimientos de inventario'"
+    styleClass="app-dialog"
+    (onHide)="closeMovementsDialog()"
+  >
+    <div class="table-card movements-table">
+      <p-table
+        [value]="movements()"
+        [loading]="loadingMovements()"
+        [paginator]="true"
+        [rows]="movementRows()"
+        [first]="(movementCurrentPage() - 1) * movementRows()"
+        [totalRecords]="movementTotalRecords()"
+        [lazy]="true"
+        (onPage)="onMovementPageChange($event)"
+        responsiveLayout="scroll"
+        dataKey="id"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>movement_type</th>
+            <th>reference_type</th>
+            <th>quantity</th>
+            <th>stock_before</th>
+            <th>stock_after</th>
+            <th>movement_date</th>
+            <th>description</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-movement>
+          <tr>
+            <td>
+              <p-tag
+                [value]="getMovementTypeLabel(movement.movement_type)"
+                [severity]="getMovementSeverity(movement.movement_type)"
+              />
+            </td>
+            <td>{{ movement.reference_type || '-' }}</td>
+            <td>{{ movement.quantity }}</td>
+            <td>{{ movement.stock_before }}</td>
+            <td>{{ movement.stock_after }}</td>
+            <td>{{ movement.movement_date }}</td>
+            <td>{{ movement.description || '-' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-dialog>
+
+  <p-dialog
+    [visible]="adjustDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '36rem', maxWidth: '96vw' }"
+    [header]="'Ajuste manual de inventario'"
+    styleClass="app-dialog"
+    (onHide)="closeAdjustDialog()"
+  >
+    <form [formGroup]="adjustForm" (ngSubmit)="submitAdjustment()" class="dialog-form">
+      <div class="field">
+        <label for="movement_type">movement_type</label>
+        <select
+          id="movement_type"
+          class="native-select"
+          formControlName="movement_type"
+        >
+          <option value="entry">entry</option>
+          <option value="exit">exit</option>
+          <option value="adjustment">adjustment</option>
+          <option value="waste">waste</option>
+          <option value="return">return</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="quantity">quantity</label>
+        <input
+          id="quantity"
+          type="number"
+          pInputText
+          formControlName="quantity"
+          class="w-full"
+          min="0"
+          step="0.01"
+        />
+      </div>
+
+      <div class="field">
+        <label for="description">description</label>
+        <textarea
+          id="description"
+          pTextarea
+          rows="4"
+          formControlName="description"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeAdjustDialog()"
+        />
+        <p-button
+          type="submit"
+          label="Guardar ajuste"
+          icon="pi pi-save"
+          [loading]="savingAdjustment()"
+          [disabled]="isAdjustSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</section>
