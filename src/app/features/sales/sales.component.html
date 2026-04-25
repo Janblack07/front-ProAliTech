@@ -1,3 +1,401 @@
-<p-card header="Sales">
-      <p>Bienvenido al Sales.</p>
-    </p-card>
+<section class="sales-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Ventas</h2>
+      <p>Gestiona los registros de venta.</p>
+    </div>
+
+    <p-button
+      label="Nueva venta"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por factura o cliente"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="status_filter">status</label>
+        <input
+          id="status_filter"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="registered"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="sales()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Factura</th>
+          <th>Cliente</th>
+          <th>Documento</th>
+          <th>Subtotal</th>
+          <th>Total</th>
+          <th>Estado</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-sale>
+        <tr>
+          <td>{{ sale.sale_date }}</td>
+          <td class="strong">{{ sale.invoice_number || '-' }}</td>
+          <td>{{ sale.customer_name || '-' }}</td>
+          <td>{{ sale.customer_document || '-' }}</td>
+          <td>{{ sale.subtotal }}</td>
+          <td>{{ sale.total }}</td>
+          <td>
+            <p-tag
+              [value]="sale.status"
+              [severity]="getStatusSeverity(sale.status)"
+            />
+          </td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openViewDialog(sale)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              No se encontraron ventas.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '74rem', maxWidth: '98vw' }"
+    [header]="'Nueva venta'"
+    styleClass="app-dialog"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="form-grid form-grid-4">
+        <div class="field">
+          <label for="sale_date">sale_date</label>
+          <input
+            id="sale_date"
+            type="date"
+            pInputText
+            formControlName="sale_date"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="invoice_number">invoice_number</label>
+          <input
+            id="invoice_number"
+            type="text"
+            pInputText
+            formControlName="invoice_number"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="customer_name">customer_name</label>
+          <input
+            id="customer_name"
+            type="text"
+            pInputText
+            formControlName="customer_name"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="customer_document">customer_document</label>
+          <input
+            id="customer_document"
+            type="text"
+            pInputText
+            formControlName="customer_document"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="tax">tax</label>
+          <input
+            id="tax"
+            type="number"
+            pInputText
+            formControlName="tax"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="discount">discount</label>
+          <input
+            id="discount"
+            type="number"
+            pInputText
+            formControlName="discount"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="notes">notes</label>
+        <textarea
+          id="notes"
+          pTextarea
+          rows="3"
+          formControlName="notes"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="details-section">
+        <div class="details-header">
+          <h3>details</h3>
+          <p-button
+            type="button"
+            label="Agregar detalle"
+            icon="pi pi-plus"
+            [text]="true"
+            (onClick)="addDetail()"
+          />
+        </div>
+
+        <div class="details-list">
+          @for (detail of details.controls; track $index) {
+            <div class="detail-card app-card" [formGroup]="detail">
+              <div class="form-grid form-grid-4">
+                <div class="field">
+                  <label>product_id</label>
+                  <select
+                    class="native-select"
+                    formControlName="product_id"
+                  >
+                    <option [ngValue]="null">Selecciona producto</option>
+                    @for (product of productOptions(); track product.id) {
+                      <option [ngValue]="product.id">
+                        {{ product.name }} ({{ product.code }})
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>quantity</label>
+                  <input
+                    type="number"
+                    pInputText
+                    formControlName="quantity"
+                    class="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>unit_price</label>
+                  <input
+                    type="number"
+                    pInputText
+                    formControlName="unit_price"
+                    class="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>discount</label>
+                  <input
+                    type="number"
+                    pInputText
+                    formControlName="discount"
+                    class="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              <div class="detail-footer">
+                <div class="detail-subtotal">
+                  Subtotal: {{ calculateDetailSubtotal($index) | number:'1.2-2' }}
+                </div>
+
+                <div class="detail-actions">
+                  <p-button
+                    type="button"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    (onClick)="removeDetail($index)"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="totals-card app-card">
+        <div><strong>Subtotal:</strong> {{ calculateSubtotal() | number:'1.2-2' }}</div>
+        <div><strong>Total:</strong> {{ calculateTotal() | number:'1.2-2' }}</div>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          label="Guardar"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+
+  <p-dialog
+    [visible]="viewDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '70rem', maxWidth: '98vw' }"
+    [header]="'Detalle de venta'"
+    styleClass="app-dialog"
+    (onHide)="closeViewDialog()"
+  >
+    @if (selectedSale(); as sale) {
+      <div class="view-grid">
+        <div class="app-card view-card">
+          <h3>Información general</h3>
+          <p><strong>Fecha:</strong> {{ sale.sale_date }}</p>
+          <p><strong>Factura:</strong> {{ sale.invoice_number || '-' }}</p>
+          <p><strong>Cliente:</strong> {{ sale.customer_name || '-' }}</p>
+          <p><strong>Documento:</strong> {{ sale.customer_document || '-' }}</p>
+          <p><strong>Estado:</strong> {{ sale.status }}</p>
+        </div>
+
+        <div class="app-card view-card">
+          <h3>Totales</h3>
+          <p><strong>subtotal:</strong> {{ sale.subtotal }}</p>
+          <p><strong>tax:</strong> {{ sale.tax }}</p>
+          <p><strong>discount:</strong> {{ sale.discount }}</p>
+          <p><strong>total:</strong> {{ sale.total }}</p>
+        </div>
+      </div>
+
+      <div class="app-card detail-table-card">
+        <h3>details</h3>
+
+        <p-table
+          [value]="sale.details"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio unitario</th>
+              <th>Descuento</th>
+              <th>Subtotal</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-detail>
+            <tr>
+              <td>{{ detail.product?.name || '-' }}</td>
+              <td>{{ detail.quantity }}</td>
+              <td>{{ detail.unit_price }}</td>
+              <td>{{ detail.discount }}</td>
+              <td>{{ detail.subtotal }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </p-dialog>
+</section>
