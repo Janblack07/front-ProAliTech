@@ -1,3 +1,181 @@
-<p-card header="Dashboard">
-      <p>Bienvenido al sistema ProAliTech.</p>
-    </p-card>
+<section class="dashboard-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Dashboard</h2>
+      <p>Resumen general del sistema administrativo.</p>
+    </div>
+
+    <p-button
+      label="Actualizar"
+      icon="pi pi-refresh"
+      [loading]="loading()"
+      (onClick)="loadDashboard()"
+    />
+  </div>
+
+  <div class="stats-grid">
+    @for (card of statCards(); track card.title) {
+      <a class="stat-card app-card" [routerLink]="card.route || '/app'">
+        <div class="stat-card__top">
+          <span class="stat-card__icon">
+            <i [class]="card.icon"></i>
+          </span>
+        </div>
+
+        <div class="stat-card__content">
+          <span class="stat-card__title">{{ card.title }}</span>
+          <strong class="stat-card__value">{{ card.value }}</strong>
+          <small class="stat-card__subtitle">{{ card.subtitle }}</small>
+        </div>
+      </a>
+    }
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="app-card panel-card">
+      <div class="panel-header">
+        <h3>Alertas de stock bajo</h3>
+        <span class="panel-badge">{{ lowStockCount() }}</span>
+      </div>
+
+      @if (lowStockItems().length) {
+        <div class="alert-list">
+          @for (item of lowStockItems(); track item.code) {
+            <div class="alert-item">
+              <div class="alert-item__top">
+                <div>
+                  <strong>{{ item.name }}</strong>
+                  <small>{{ item.code }} · {{ item.inventory_type }}</small>
+                </div>
+                <p-tag value="Stock bajo" severity="danger" />
+              </div>
+
+              <div class="alert-item__meta">
+                <span>Actual: {{ item.current_stock }}</span>
+                <span>Mínimo: {{ item.minimum_stock }}</span>
+              </div>
+
+              <p-progressBar
+                [value]="getLowStockPercent(item.current_stock, item.minimum_stock)"
+                [showValue]="false"
+                styleClass="stock-progress"
+              />
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">No hay alertas de stock bajo.</div>
+      }
+    </div>
+
+    <div class="app-card panel-card">
+      <div class="panel-header">
+        <h3>Ventas recientes</h3>
+        <a routerLink="/app/sales" class="panel-link">Ver más</a>
+      </div>
+
+      @if (recentSales().length) {
+        <div class="mini-list">
+          @for (sale of recentSales(); track sale.invoice_number + sale.sale_date) {
+            <div class="mini-item">
+              <div>
+                <strong>{{ sale.invoice_number || 'Sin factura' }}</strong>
+                <small>{{ sale.customer_name || 'Cliente no especificado' }}</small>
+              </div>
+
+              <div class="mini-item__right">
+                <span>{{ sale.total }}</span>
+                <p-tag
+                  [value]="sale.status"
+                  [severity]="getSaleStatusSeverity(sale.status)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">No hay ventas recientes.</div>
+      }
+    </div>
+
+    <div class="app-card panel-card">
+      <div class="panel-header">
+        <h3>Compras recientes</h3>
+        <a routerLink="/app/purchases" class="panel-link">Ver más</a>
+      </div>
+
+      @if (recentPurchases().length) {
+        <div class="mini-list">
+          @for (purchase of recentPurchases(); track purchase.invoice_number + purchase.purchase_date) {
+            <div class="mini-item">
+              <div>
+                <strong>{{ purchase.invoice_number || 'Sin comprobante' }}</strong>
+                <small>{{ purchase.supplier?.business_name || 'Proveedor no definido' }}</small>
+              </div>
+
+              <div class="mini-item__right">
+                <span>{{ purchase.total }}</span>
+                <small>{{ purchase.purchase_date }}</small>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">No hay compras recientes.</div>
+      }
+    </div>
+
+    <div class="app-card panel-card">
+      <div class="panel-header">
+        <h3>Producción reciente</h3>
+        <a routerLink="/app/productions" class="panel-link">Ver más</a>
+      </div>
+
+      @if (recentProductions().length) {
+        <div class="mini-list">
+          @for (production of recentProductions(); track production.batch_number + production.production_date) {
+            <div class="mini-item">
+              <div>
+                <strong>{{ production.batch_number }}</strong>
+                <small>{{ production.product?.name || 'Producto no definido' }}</small>
+              </div>
+
+              <div class="mini-item__right">
+                <small>{{ production.production_date }}</small>
+                <p-tag
+                  [value]="production.status"
+                  [severity]="getProductionStatusSeverity(production.status)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">No hay producciones recientes.</div>
+      }
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="app-card summary-card">
+      <h3>Rentabilidad</h3>
+      <p class="summary-value">{{ profitableCount() }}</p>
+      <span class="summary-label">productos rentables detectados</span>
+      <a routerLink="/app/profitability" class="summary-link">Ir a rentabilidad</a>
+    </div>
+
+    <div class="app-card summary-card">
+      <h3>Simulación</h3>
+      <p class="summary-value">{{ ideasCount() }}</p>
+      <span class="summary-label">ideas de producto registradas</span>
+      <a routerLink="/app/product-ideas" class="summary-link">Ir a ideas de producto</a>
+    </div>
+
+    <div class="app-card summary-card">
+      <h3>Inventario</h3>
+      <p class="summary-value">{{ lowStockCount() }}</p>
+      <span class="summary-label">alertas activas de stock bajo</span>
+      <a routerLink="/app/inventory" class="summary-link">Ir a inventario</a>
+    </div>
+  </div>
+</section>
