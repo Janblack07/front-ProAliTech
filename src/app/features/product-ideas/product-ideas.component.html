@@ -1,3 +1,509 @@
-<p-card header="product-ideas">
-      <p>Bienvenido al product-ideas.</p>
-    </p-card>
+<section class="product-ideas-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Ideas de producto</h2>
+      <p>Gestiona propuestas y simulaciones de viabilidad.</p>
+    </div>
+
+    <p-button
+      label="Nueva idea"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por idea o categoría"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="status_filter">status</label>
+        <input
+          id="status_filter"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="draft"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="items()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Idea</th>
+          <th>Categoría</th>
+          <th>Precio propuesto</th>
+          <th>Demanda esperada</th>
+          <th>Estado</th>
+          <th>Última evaluación</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td class="strong">{{ item.idea_name }}</td>
+          <td>{{ item.category?.name || '-' }}</td>
+          <td>{{ item.proposed_sale_price ?? '-' }}</td>
+          <td>{{ item.expected_demand || '-' }}</td>
+          <td>
+            <p-tag
+              [value]="item.status"
+              [severity]="getStatusSeverity(item.status)"
+            />
+          </td>
+          <td>
+            @if (item.latest_evaluation) {
+              <p-tag
+                [value]="item.latest_evaluation.viability_result"
+                [severity]="getViabilitySeverity(item.latest_evaluation.viability_result)"
+              />
+            } @else {
+              <span>-</span>
+            }
+          </td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openEditDialog(item)"
+              />
+              <p-button
+                icon="pi pi-chart-line"
+                [rounded]="true"
+                [text]="true"
+                severity="success"
+                (onClick)="openEvaluationDialog(item)"
+              />
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="contrast"
+                (onClick)="openViewDialog(item)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              No se encontraron ideas de producto.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '70rem', maxWidth: '98vw' }"
+    [header]="selectedIdea() ? 'Editar idea de producto' : 'Nueva idea de producto'"
+    styleClass="app-dialog"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="form-grid form-grid-3">
+        <div class="field">
+          <label for="category_id">category_id</label>
+          <select
+            id="category_id"
+            class="native-select"
+            formControlName="category_id"
+          >
+            <option [ngValue]="null">Selecciona una categoría</option>
+            @for (category of categoryOptions(); track category.id) {
+              <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="idea_name">idea_name</label>
+          <input
+            id="idea_name"
+            type="text"
+            pInputText
+            formControlName="idea_name"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="status">status</label>
+          <input
+            id="status"
+            type="text"
+            pInputText
+            formControlName="status"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="description">description</label>
+        <textarea
+          id="description"
+          pTextarea
+          rows="3"
+          formControlName="description"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="form-grid form-grid-4">
+        <div class="field">
+          <label for="proposed_sale_price">proposed_sale_price</label>
+          <input
+            id="proposed_sale_price"
+            type="number"
+            pInputText
+            formControlName="proposed_sale_price"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="expected_demand">expected_demand</label>
+          <input
+            id="expected_demand"
+            type="text"
+            pInputText
+            formControlName="expected_demand"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="competition_level">competition_level</label>
+          <input
+            id="competition_level"
+            type="text"
+            pInputText
+            formControlName="competition_level"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="estimated_waste_percent">estimated_waste_percent</label>
+          <input
+            id="estimated_waste_percent"
+            type="number"
+            pInputText
+            formControlName="estimated_waste_percent"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-3">
+        <div class="field">
+          <label for="estimated_labor_cost">estimated_labor_cost</label>
+          <input
+            id="estimated_labor_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_labor_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="estimated_energy_cost">estimated_energy_cost</label>
+          <input
+            id="estimated_energy_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_energy_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="estimated_indirect_cost">estimated_indirect_cost</label>
+          <input
+            id="estimated_indirect_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_indirect_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="observations">observations</label>
+        <textarea
+          id="observations"
+          pTextarea
+          rows="3"
+          formControlName="observations"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          [label]="selectedIdea() ? 'Actualizar' : 'Guardar'"
+          icon="pi pi-save"
+          [loading]="saving()"
+        />
+      </div>
+    </form>
+  </p-dialog>
+
+  <p-dialog
+    [visible]="evaluationDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '52rem', maxWidth: '96vw' }"
+    [header]="'Nueva evaluación'"
+    styleClass="app-dialog"
+    (onHide)="closeEvaluationDialog()"
+  >
+    <form [formGroup]="evaluationForm" (ngSubmit)="submitEvaluation()" class="dialog-form">
+      <div class="form-grid form-grid-3">
+        <div class="field">
+          <label for="estimated_total_cost">estimated_total_cost</label>
+          <input
+            id="estimated_total_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_total_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="estimated_unit_cost">estimated_unit_cost</label>
+          <input
+            id="estimated_unit_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_unit_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="evaluation_sale_price">proposed_sale_price</label>
+          <input
+            id="evaluation_sale_price"
+            type="number"
+            pInputText
+            formControlName="proposed_sale_price"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="fixed_costs">fixed_costs</label>
+          <input
+            id="fixed_costs"
+            type="number"
+            pInputText
+            formControlName="fixed_costs"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field preview-box app-card">
+          <span>estimated_profit</span>
+          <strong>{{ estimatedProfit() | number:'1.2-2' }}</strong>
+          <span>estimated_margin_percent</span>
+          <strong>{{ estimatedMargin() | number:'1.2-2' }}%</strong>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="recommendation_notes">recommendation_notes</label>
+        <textarea
+          id="recommendation_notes"
+          pTextarea
+          rows="3"
+          formControlName="recommendation_notes"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeEvaluationDialog()"
+        />
+        <p-button
+          type="submit"
+          label="Evaluar"
+          icon="pi pi-chart-line"
+          [loading]="savingEvaluation()"
+        />
+      </div>
+    </form>
+  </p-dialog>
+
+  <p-dialog
+    [visible]="viewDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '72rem', maxWidth: '98vw' }"
+    [header]="'Detalle de idea de producto'"
+    styleClass="app-dialog"
+    (onHide)="closeViewDialog()"
+  >
+    @if (selectedIdea(); as item) {
+      <div class="view-grid">
+        <div class="app-card view-card">
+          <h3>Idea</h3>
+          <p><strong>idea_name:</strong> {{ item.idea_name }}</p>
+          <p><strong>category:</strong> {{ item.category?.name || '-' }}</p>
+          <p><strong>status:</strong> {{ item.status }}</p>
+          <p><strong>expected_demand:</strong> {{ item.expected_demand || '-' }}</p>
+          <p><strong>competition_level:</strong> {{ item.competition_level || '-' }}</p>
+        </div>
+
+        <div class="app-card view-card">
+          <h3>Costos estimados</h3>
+          <p><strong>proposed_sale_price:</strong> {{ item.proposed_sale_price ?? '-' }}</p>
+          <p><strong>estimated_labor_cost:</strong> {{ item.estimated_labor_cost ?? '-' }}</p>
+          <p><strong>estimated_energy_cost:</strong> {{ item.estimated_energy_cost ?? '-' }}</p>
+          <p><strong>estimated_indirect_cost:</strong> {{ item.estimated_indirect_cost ?? '-' }}</p>
+          <p><strong>estimated_waste_percent:</strong> {{ item.estimated_waste_percent ?? '-' }}</p>
+        </div>
+      </div>
+
+      <div class="app-card detail-table-card">
+        <h3>Evaluaciones</h3>
+
+        <p-table
+          [value]="evaluations()"
+          [loading]="loadingEvaluations()"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>estimated_total_cost</th>
+              <th>estimated_unit_cost</th>
+              <th>proposed_sale_price</th>
+              <th>estimated_profit</th>
+              <th>estimated_margin_percent</th>
+              <th>break_even_quantity</th>
+              <th>viability_result</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-evaluation>
+            <tr>
+              <td>{{ evaluation.estimated_total_cost }}</td>
+              <td>{{ evaluation.estimated_unit_cost }}</td>
+              <td>{{ evaluation.proposed_sale_price }}</td>
+              <td>{{ evaluation.estimated_profit }}</td>
+              <td>{{ evaluation.estimated_margin_percent }}</td>
+              <td>{{ evaluation.break_even_quantity ?? '-' }}</td>
+              <td>
+                <p-tag
+                  [value]="evaluation.viability_result"
+                  [severity]="getViabilitySeverity(evaluation.viability_result)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </p-dialog>
+</section>
