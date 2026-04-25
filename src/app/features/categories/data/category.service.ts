@@ -46,6 +46,11 @@ export class CategoryService {
       { params: httpParams }
     );
   }
+  getActiveCategories(): Observable<ApiResponse<Array<{ id: number; name: string }>>> {
+  return this.http.get<ApiResponse<Array<{ id: number; name: string }>>>(
+    `${this.apiUrl}/categories/active/list`
+  );
+}
 
   createCategory(payload: CategoryPayload): Observable<ApiResponse<Category>> {
     return this.http.post<ApiResponse<Category>>(
