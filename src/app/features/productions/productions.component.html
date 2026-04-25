@@ -1,3 +1,479 @@
-<p-card header="productions">
-      <p>Bienvenido al productions.</p>
-    </p-card>
+<section class="productions-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Producción</h2>
+      <p>Gestiona los registros de producción.</p>
+    </div>
+
+    <p-button
+      label="Nueva producción"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por lote o producto"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="status_filter">Estado</label>
+        <select
+          id="status_filter"
+          class="native-select"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+        >
+          <option value="all">Todos</option>
+          <option value="in_progress">En proceso</option>
+          <option value="completed">Completadas</option>
+          <option value="cancelled">Canceladas</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="productions()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Lote</th>
+          <th>Producto</th>
+          <th>Fecha</th>
+          <th>Esperado</th>
+          <th>Producido</th>
+          <th>Costo total</th>
+          <th>Estado</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-production>
+        <tr>
+          <td class="strong">{{ production.batch_number }}</td>
+          <td>{{ production.product?.name || '-' }}</td>
+          <td>{{ production.production_date }}</td>
+          <td>{{ production.expected_quantity }}</td>
+          <td>{{ production.produced_quantity }}</td>
+          <td>{{ production.total_cost }}</td>
+          <td>
+            <p-tag
+              [value]="getStatusLabel(production.status)"
+              [severity]="getStatusSeverity(production.status)"
+            />
+          </td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openViewDialog(production)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              No se encontraron producciones.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '74rem', maxWidth: '98vw' }"
+    [header]="'Nueva producción'"
+    styleClass="app-dialog"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="form-grid form-grid-3">
+        <div class="field">
+          <label for="product_id">product_id</label>
+          <select
+            id="product_id"
+            class="native-select"
+            formControlName="product_id"
+            (ngModelChange)="onProductChange($event)"
+          >
+            <option [ngValue]="null">Selecciona un producto</option>
+            @for (product of productOptions(); track product.id) {
+              <option [ngValue]="product.id">
+                {{ product.name }} ({{ product.code }})
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="recipe_id">recipe_id</label>
+          <select
+            id="recipe_id"
+            class="native-select"
+            formControlName="recipe_id"
+          >
+            <option [ngValue]="null">Sin receta</option>
+            @for (recipe of recipeOptions(); track recipe.id) {
+              <option [ngValue]="recipe.id">
+                {{ recipe.recipe_name }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="batch_number">batch_number</label>
+          <input
+            id="batch_number"
+            type="text"
+            pInputText
+            formControlName="batch_number"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-4">
+        <div class="field">
+          <label for="production_date">production_date</label>
+          <input
+            id="production_date"
+            type="date"
+            pInputText
+            formControlName="production_date"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="expected_quantity">expected_quantity</label>
+          <input
+            id="expected_quantity"
+            type="number"
+            pInputText
+            formControlName="expected_quantity"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="produced_quantity">produced_quantity</label>
+          <input
+            id="produced_quantity"
+            type="number"
+            pInputText
+            formControlName="produced_quantity"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="unit_measure">unit_measure</label>
+          <input
+            id="unit_measure"
+            type="text"
+            pInputText
+            formControlName="unit_measure"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-4">
+        <div class="field">
+          <label for="labor_cost">labor_cost</label>
+          <input
+            id="labor_cost"
+            type="number"
+            pInputText
+            formControlName="labor_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="energy_cost">energy_cost</label>
+          <input
+            id="energy_cost"
+            type="number"
+            pInputText
+            formControlName="energy_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="indirect_cost">indirect_cost</label>
+          <input
+            id="indirect_cost"
+            type="number"
+            pInputText
+            formControlName="indirect_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="waste_quantity">waste_quantity</label>
+          <input
+            id="waste_quantity"
+            type="number"
+            pInputText
+            formControlName="waste_quantity"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="notes">notes</label>
+        <textarea
+          id="notes"
+          pTextarea
+          rows="3"
+          formControlName="notes"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="details-section">
+        <div class="details-header">
+          <h3>details</h3>
+          <p-button
+            type="button"
+            label="Agregar detalle"
+            icon="pi pi-plus"
+            [text]="true"
+            (onClick)="addDetail()"
+          />
+        </div>
+
+        <div class="details-list">
+          @for (detail of details.controls; track $index) {
+            <div class="detail-card app-card" [formGroup]="detail">
+              <div class="form-grid form-grid-5">
+                <div class="field">
+                  <label>raw_material_id</label>
+                  <select
+                    class="native-select"
+                    formControlName="raw_material_id"
+                    (ngModelChange)="onRawMaterialChange($index, $event)"
+                  >
+                    <option [ngValue]="null">Selecciona materia prima</option>
+                    @for (rawMaterial of rawMaterialOptions(); track rawMaterial.id) {
+                      <option [ngValue]="rawMaterial.id">
+                        {{ rawMaterial.name }} ({{ rawMaterial.code }})
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>quantity_used</label>
+                  <input
+                    type="number"
+                    pInputText
+                    formControlName="quantity_used"
+                    class="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>unit_measure</label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="unit_measure"
+                    class="w-full"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>batch_number</label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="batch_number"
+                    class="w-full"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>expiration_date</label>
+                  <input
+                    type="date"
+                    pInputText
+                    formControlName="expiration_date"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+
+              <div class="detail-actions">
+                <p-button
+                  type="button"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  (onClick)="removeDetail($index)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          label="Guardar"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+
+  <p-dialog
+    [visible]="viewDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '70rem', maxWidth: '98vw' }"
+    [header]="'Detalle de producción'"
+    styleClass="app-dialog"
+    (onHide)="closeViewDialog()"
+  >
+    @if (selectedProduction(); as production) {
+      <div class="view-grid">
+        <div class="app-card view-card">
+          <h3>Información general</h3>
+          <p><strong>Lote:</strong> {{ production.batch_number }}</p>
+          <p><strong>Producto:</strong> {{ production.product?.name || '-' }}</p>
+          <p><strong>Receta:</strong> {{ production.recipe?.recipe_name || '-' }}</p>
+          <p><strong>Fecha:</strong> {{ production.production_date }}</p>
+          <p><strong>Estado:</strong> {{ getStatusLabel(production.status) }}</p>
+        </div>
+
+        <div class="app-card view-card">
+          <h3>Costos</h3>
+          <p><strong>labor_cost:</strong> {{ production.labor_cost }}</p>
+          <p><strong>energy_cost:</strong> {{ production.energy_cost }}</p>
+          <p><strong>indirect_cost:</strong> {{ production.indirect_cost }}</p>
+          <p><strong>total_cost:</strong> {{ production.total_cost }}</p>
+          <p><strong>unit_cost:</strong> {{ production.unit_cost }}</p>
+        </div>
+      </div>
+
+      <div class="app-card detail-table-card">
+        <h3>details</h3>
+
+        <p-table
+          [value]="production.details"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Materia prima</th>
+              <th>Cantidad usada</th>
+              <th>Unidad</th>
+              <th>Costo unitario</th>
+              <th>Costo total</th>
+              <th>Lote</th>
+              <th>Vencimiento</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-detail>
+            <tr>
+              <td>{{ detail.raw_material?.name || '-' }}</td>
+              <td>{{ detail.quantity_used }}</td>
+              <td>{{ detail.unit_measure }}</td>
+              <td>{{ detail.unit_cost }}</td>
+              <td>{{ detail.total_cost }}</td>
+              <td>{{ detail.batch_number || '-' }}</td>
+              <td>{{ detail.expiration_date || '-' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </p-dialog>
+</section>

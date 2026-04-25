@@ -58,4 +58,9 @@ export class RecipeService {
   updateRecipe(id: number, payload: RecipePayload): Observable<ApiResponse<Recipe>> {
     return this.http.put<ApiResponse<Recipe>>(`${this.apiUrl}/recipes/${id}`, payload);
   }
+  getActiveRecipes(): Observable<ApiResponse<Array<{ id: number; recipe_name: string; product_id: number }>>> {
+  return this.http.get<ApiResponse<Array<{ id: number; recipe_name: string; product_id: number }>>>(
+    `${this.apiUrl}/recipes/active/list`
+  );
+}
 }
