@@ -1,3 +1,276 @@
-<p-card header="Users">
-      <p>Bienvenido al Users.</p>
-    </p-card>
+<section class="users-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Usuarios</h2>
+      <p>Gestiona usuarios, estado y roles del sistema.</p>
+    </div>
+
+    <p-button
+      label="Nuevo usuario"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por nombre, apellido o correo"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="status_filter">Estado</label>
+        <select
+          id="status_filter"
+          class="native-select"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+        >
+          <option value="all">Todos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="users()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Usuario</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Roles</th>
+          <th>Estado</th>
+          <th>Último acceso</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td class="strong">{{ user.full_name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.phone || '-' }}</td>
+          <td>
+            <div class="role-tags">
+              @for (role of user.roles; track role.id) {
+                <p-tag [value]="role.name" severity="info" />
+              }
+            </div>
+          </td>
+          <td>
+            @if (user.status) {
+              <p-tag value="Activo" severity="success" />
+            } @else {
+              <p-tag value="Inactivo" severity="danger" />
+            }
+          </td>
+          <td>{{ user.last_login_at || '-' }}</td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openEditDialog(user)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (onClick)="deleteUser(user)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              No se encontraron usuarios.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '54rem', maxWidth: '96vw' }"
+    [header]="isEditMode ? 'Editar usuario' : 'Nuevo usuario'"
+    styleClass="app-dialog"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="name">name</label>
+          <input
+            id="name"
+            type="text"
+            pInputText
+            formControlName="name"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="lastname">lastname</label>
+          <input
+            id="lastname"
+            type="text"
+            pInputText
+            formControlName="lastname"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="email">email</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="phone">phone</label>
+          <input
+            id="phone"
+            type="text"
+            pInputText
+            formControlName="phone"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="password">password</label>
+          <input
+            id="password"
+            type="password"
+            pInputText
+            formControlName="password"
+            class="w-full"
+            [placeholder]="isEditMode ? 'Opcional para actualizar' : ''"
+          />
+        </div>
+
+        <div class="field">
+          <label for="password_confirmation">password_confirmation</label>
+          <input
+            id="password_confirmation"
+            type="password"
+            pInputText
+            formControlName="password_confirmation"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      @if (form.errors?.['passwordMismatch']) {
+        <small class="field-error">Las contraseñas no coinciden.</small>
+      }
+
+      <div class="checkbox-field">
+        <p-checkbox
+          inputId="status"
+          formControlName="status"
+          [binary]="true"
+        />
+        <label for="status">Usuario activo</label>
+      </div>
+
+      <div class="roles-section app-card">
+        <h3>roles</h3>
+        <div class="roles-grid">
+          @for (role of roleOptions(); track role.id) {
+            <div class="role-option">
+              <p-checkbox
+                [inputId]="'role-' + role.id"
+                [binary]="true"
+                [ngModel]="hasRole(role.name)"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="toggleRole(role.name, $event)"
+              />
+              <label [for]="'role-' + role.id">{{ role.name }}</label>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</section>
