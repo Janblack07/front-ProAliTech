@@ -1,3 +1,385 @@
-<p-card header="Purchases">
-      <p>Bienvenido al Purchases.</p>
-    </p-card>
+<section class="purchases-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Compras</h2>
+      <p>Gestiona los registros de compra.</p>
+    </div>
+
+    <p-button
+      label="Nueva compra"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por factura o proveedor"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="status_filter">Estado</label>
+        <input
+          id="status_filter"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="registered"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="purchases()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Proveedor</th>
+          <th>Fecha</th>
+          <th>Factura</th>
+          <th>Subtotal</th>
+          <th>IVA</th>
+          <th>Total</th>
+          <th>Estado</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-purchase>
+        <tr>
+          <td class="strong">{{ purchase.supplier?.business_name || '-' }}</td>
+          <td>{{ purchase.purchase_date }}</td>
+          <td>{{ purchase.invoice_number || '-' }}</td>
+          <td>{{ purchase.subtotal }}</td>
+          <td>{{ purchase.tax }}</td>
+          <td>{{ purchase.total }}</td>
+          <td>
+            <p-tag [value]="purchase.status" severity="success" />
+          </td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openViewDialog(purchase)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              No se encontraron compras.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '74rem', maxWidth: '98vw' }"
+    [header]="'Nueva compra'"
+    styleClass="app-dialog"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="form-grid form-grid-4">
+        <div class="field">
+          <label for="supplier_id">supplier_id</label>
+          <select
+            id="supplier_id"
+            class="native-select"
+            formControlName="supplier_id"
+          >
+            <option [ngValue]="null">Selecciona un proveedor</option>
+            @for (supplier of supplierOptions(); track supplier.id) {
+              <option [ngValue]="supplier.id">
+                {{ supplier.business_name }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="purchase_date">purchase_date</label>
+          <input
+            id="purchase_date"
+            type="date"
+            pInputText
+            formControlName="purchase_date"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="invoice_number">invoice_number</label>
+          <input
+            id="invoice_number"
+            type="text"
+            pInputText
+            formControlName="invoice_number"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="tax">tax</label>
+          <input
+            id="tax"
+            type="number"
+            pInputText
+            formControlName="tax"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="notes">notes</label>
+        <textarea
+          id="notes"
+          pTextarea
+          rows="3"
+          formControlName="notes"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="details-section">
+        <div class="details-header">
+          <h3>details</h3>
+          <p-button
+            type="button"
+            label="Agregar detalle"
+            icon="pi pi-plus"
+            [text]="true"
+            (onClick)="addDetail()"
+          />
+        </div>
+
+        <div class="details-list">
+          @for (detail of details.controls; track $index) {
+            <div class="detail-card app-card" [formGroup]="detail">
+              <div class="form-grid form-grid-5">
+                <div class="field">
+                  <label>raw_material_id</label>
+                  <select
+                    class="native-select"
+                    formControlName="raw_material_id"
+                  >
+                    <option [ngValue]="null">Selecciona materia prima</option>
+                    @for (rawMaterial of rawMaterialOptions(); track rawMaterial.id) {
+                      <option [ngValue]="rawMaterial.id">
+                        {{ rawMaterial.name }} ({{ rawMaterial.code }})
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>quantity</label>
+                  <input
+                    type="number"
+                    pInputText
+                    formControlName="quantity"
+                    class="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>unit_price</label>
+                  <input
+                    type="number"
+                    pInputText
+                    formControlName="unit_price"
+                    class="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>expiration_date</label>
+                  <input
+                    type="date"
+                    pInputText
+                    formControlName="expiration_date"
+                    class="w-full"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>batch_number</label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="batch_number"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+
+              <div class="detail-footer">
+                <div class="detail-subtotal">
+                  Subtotal: {{ calculateDetailSubtotal($index) | number:'1.2-2' }}
+                </div>
+
+                <div class="detail-actions">
+                  <p-button
+                    type="button"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    (onClick)="removeDetail($index)"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="totals-card app-card">
+        <div><strong>Subtotal:</strong> {{ calculateSubtotal() | number:'1.2-2' }}</div>
+        <div><strong>Total:</strong> {{ calculateTotal() | number:'1.2-2' }}</div>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          label="Guardar"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+
+  <p-dialog
+    [visible]="viewDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '70rem', maxWidth: '98vw' }"
+    [header]="'Detalle de compra'"
+    styleClass="app-dialog"
+    (onHide)="closeViewDialog()"
+  >
+    @if (selectedPurchase(); as purchase) {
+      <div class="view-grid">
+        <div class="app-card view-card">
+          <h3>Información general</h3>
+          <p><strong>Proveedor:</strong> {{ purchase.supplier?.business_name || '-' }}</p>
+          <p><strong>Fecha:</strong> {{ purchase.purchase_date }}</p>
+          <p><strong>Factura:</strong> {{ purchase.invoice_number || '-' }}</p>
+          <p><strong>Estado:</strong> {{ purchase.status }}</p>
+        </div>
+
+        <div class="app-card view-card">
+          <h3>Totales</h3>
+          <p><strong>subtotal:</strong> {{ purchase.subtotal }}</p>
+          <p><strong>tax:</strong> {{ purchase.tax }}</p>
+          <p><strong>total:</strong> {{ purchase.total }}</p>
+        </div>
+      </div>
+
+      <div class="app-card detail-table-card">
+        <h3>details</h3>
+
+        <p-table
+          [value]="purchase.details"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Materia prima</th>
+              <th>Cantidad</th>
+              <th>Precio unitario</th>
+              <th>Subtotal</th>
+              <th>Vencimiento</th>
+              <th>Lote</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-detail>
+            <tr>
+              <td>{{ detail.raw_material?.name || '-' }}</td>
+              <td>{{ detail.quantity }}</td>
+              <td>{{ detail.unit_price }}</td>
+              <td>{{ detail.subtotal }}</td>
+              <td>{{ detail.expiration_date || '-' }}</td>
+              <td>{{ detail.batch_number || '-' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </p-dialog>
+</section>
