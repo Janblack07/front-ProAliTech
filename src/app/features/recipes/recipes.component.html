@@ -1,3 +1,356 @@
-<p-card header="Recipes">
-      <p>Bienvenido al Recipes.</p>
-    </p-card>
+<section class="recipes-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Recetas</h2>
+      <p>Gestiona las recetas de producción.</p>
+    </div>
+
+    <p-button
+      label="Nueva receta"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por receta o producto"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="field">
+        <label for="status_filter">Estado</label>
+        <select
+          id="status_filter"
+          class="native-select"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusFilterChange($event)"
+        >
+          <option value="all">Todos</option>
+          <option value="active">Activas</option>
+          <option value="inactive">Inactivas</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="recipes()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Receta</th>
+          <th>Producto</th>
+          <th>Rendimiento</th>
+          <th>Unidad</th>
+          <th>Detalles</th>
+          <th>Estado</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-recipe>
+        <tr>
+          <td class="strong">{{ recipe.recipe_name }}</td>
+          <td>{{ recipe.product?.name || '-' }}</td>
+          <td>{{ recipe.expected_yield }}</td>
+          <td>{{ recipe.unit_measure }}</td>
+          <td>{{ recipe.details.length }}</td>
+          <td>
+            @if (recipe.status) {
+              <p-tag value="Activa" severity="success" />
+            } @else {
+              <p-tag value="Inactiva" severity="danger" />
+            }
+          </td>
+          <td class="actions-column">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="openEditDialog(recipe)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              No se encontraron recetas.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [visible]="dialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    [style]="{ width: '72rem', maxWidth: '98vw' }"
+    [header]="isEditMode ? 'Editar receta' : 'Nueva receta'"
+    (onHide)="closeDialog()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="product_id">product_id</label>
+          <select
+            id="product_id"
+            class="native-select"
+            formControlName="product_id"
+          >
+            <option [ngValue]="null">Selecciona un producto</option>
+            @for (product of productOptions(); track product.id) {
+              <option [ngValue]="product.id">
+                {{ product.name }} ({{ product.code }})
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="recipe_name">recipe_name</label>
+          <input
+            id="recipe_name"
+            type="text"
+            pInputText
+            formControlName="recipe_name"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-4">
+        <div class="field">
+          <label for="expected_yield">expected_yield</label>
+          <input
+            id="expected_yield"
+            type="number"
+            pInputText
+            formControlName="expected_yield"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="unit_measure">unit_measure</label>
+          <input
+            id="unit_measure"
+            type="text"
+            pInputText
+            formControlName="unit_measure"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label for="estimated_labor_cost">estimated_labor_cost</label>
+          <input
+            id="estimated_labor_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_labor_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="estimated_energy_cost">estimated_energy_cost</label>
+          <input
+            id="estimated_energy_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_energy_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label for="estimated_indirect_cost">estimated_indirect_cost</label>
+          <input
+            id="estimated_indirect_cost"
+            type="number"
+            pInputText
+            formControlName="estimated_indirect_cost"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="field">
+          <label for="estimated_waste_percent">estimated_waste_percent</label>
+          <input
+            id="estimated_waste_percent"
+            type="number"
+            pInputText
+            formControlName="estimated_waste_percent"
+            class="w-full"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="instructions">instructions</label>
+        <textarea
+          id="instructions"
+          pTextarea
+          rows="3"
+          formControlName="instructions"
+          class="w-full"
+        ></textarea>
+      </div>
+
+      <div class="checkbox-field">
+        <p-checkbox
+          inputId="status"
+          formControlName="status"
+          [binary]="true"
+        />
+        <label for="status">Receta activa</label>
+      </div>
+
+      <div class="details-section">
+        <div class="details-header">
+          <h3>details</h3>
+          <p-button
+            type="button"
+            label="Agregar detalle"
+            icon="pi pi-plus"
+            [text]="true"
+            (onClick)="addDetail()"
+          />
+        </div>
+
+        <div class="details-list">
+          @for (detail of details.controls; track $index) {
+            <div class="detail-card app-card" [formGroup]="detail">
+              <div class="form-grid form-grid-3">
+                <div class="field">
+                  <label>raw_material_id</label>
+                  <select
+                    class="native-select"
+                    formControlName="raw_material_id"
+                    (ngModelChange)="onRawMaterialChange($index, $event)"
+                  >
+                    <option [ngValue]="null">Selecciona materia prima</option>
+                    @for (rawMaterial of rawMaterialOptions(); track rawMaterial.id) {
+                      <option [ngValue]="rawMaterial.id">
+                        {{ rawMaterial.name }} ({{ rawMaterial.code }})
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>quantity</label>
+                  <input
+                    type="number"
+                    pInputText
+                    formControlName="quantity"
+                    class="w-full"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>unit_measure</label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="unit_measure"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+
+              <div class="detail-actions">
+                <p-button
+                  type="button"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  (onClick)="removeDetail($index)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeDialog()"
+        />
+        <p-button
+          type="submit"
+          [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="isSubmitDisabled"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</section>

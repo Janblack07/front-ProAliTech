@@ -69,4 +69,9 @@ export class RawMaterialService {
       `${this.apiUrl}/raw-materials/${id}`
     );
   }
+  getActiveRawMaterials(): Observable<ApiResponse<Array<{ id: number; name: string; code: string; unit_measure: string }>>> {
+    return this.http.get<ApiResponse<Array<{ id: number; name: string; code: string; unit_measure: string }>>>(
+      `${this.apiUrl}/raw-materials/active/list`
+    );
+  }
 }

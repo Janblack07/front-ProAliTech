@@ -104,4 +104,9 @@ export class ProductService {
 
     return formData;
   }
+  getActiveProducts(): Observable<ApiResponse<Array<{ id: number; name: string; code: string }>>> {
+  return this.http.get<ApiResponse<Array<{ id: number; name: string; code: string }>>>(
+    `${this.apiUrl}/products/active/list`
+  );
+}
 }
