@@ -1,3 +1,121 @@
-<p-card header="profitability">
-      <p>Bienvenido al profitability.</p>
-    </p-card>
+<section class="profitability-page">
+  <div class="page-header app-card">
+    <div>
+      <h2>Rentabilidad</h2>
+      <p>Analiza el margen y utilidad de los productos.</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="app-card kpi-card">
+      <span class="kpi-label">Productos analizados</span>
+      <strong class="kpi-value">{{ totalRecords() }}</strong>
+    </div>
+
+    <div class="app-card kpi-card">
+      <span class="kpi-label">Rentables</span>
+      <strong class="kpi-value">{{ profitableCount() }}</strong>
+    </div>
+
+    <div class="app-card kpi-card">
+      <span class="kpi-label">En riesgo</span>
+      <strong class="kpi-value">{{ riskCount() }}</strong>
+    </div>
+
+    <div class="app-card kpi-card">
+      <span class="kpi-label">Margen promedio</span>
+      <strong class="kpi-value">{{ averageMargin() | number:'1.2-2' }}%</strong>
+    </div>
+  </div>
+
+  <div class="filters-card app-card">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="search">Buscar</label>
+        <input
+          id="search"
+          type="text"
+          pInputText
+          class="w-full"
+          placeholder="Buscar por nombre o código"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="actions">
+        <p-button
+          label="Filtrar"
+          icon="pi pi-search"
+          styleClass="filter-action-button filter-action-button--success"
+          (onClick)="applyFilters()"
+        />
+        <p-button
+          label="Limpiar"
+          icon="pi pi-refresh"
+          styleClass="filter-action-button filter-action-button--secondary"
+          [outlined]="true"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card app-card">
+    <p-table
+      [value]="items()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="rows()"
+      [first]="(currentPage() - 1) * rows()"
+      [totalRecords]="totalRecords()"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      responsiveLayout="scroll"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Código</th>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th>Costo</th>
+          <th>Venta</th>
+          <th>Ganancia</th>
+          <th>Margen %</th>
+          <th>Resultado</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td class="strong">{{ item.code }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.category || '-' }}</td>
+          <td>{{ item.cost_price | number:'1.2-2' }}</td>
+          <td>{{ item.sale_price | number:'1.2-2' }}</td>
+          <td>{{ item.profit | number:'1.2-2' }}</td>
+          <td>{{ item.margin_percent | number:'1.2-2' }}%</td>
+          <td>
+            <p-tag
+              [value]="item.result"
+              [severity]="getResultSeverity(item.result)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              No se encontraron datos de rentabilidad.
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</section>

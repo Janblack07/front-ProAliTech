@@ -1,0 +1,230 @@
+.profitability-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-header,
+.filters-card,
+.table-card {
+  padding: 1.25rem 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-header h2 {
+  margin: 0 0 0.35rem;
+  color: var(--app-card-text);
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--app-card-muted);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.kpi-card {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.kpi-label {
+  color: var(--app-card-muted);
+  font-size: 0.9rem;
+}
+
+.kpi-value {
+  color: var(--app-card-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 1.5fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.field label {
+  color: var(--app-card-text);
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0;
+}
+
+:host {
+  display: block;
+}
+
+:host ::ng-deep input[pinputtext],
+:host ::ng-deep input.p-inputtext,
+:host ::ng-deep .p-inputtext {
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 0.95rem !important;
+  border-radius: 14px !important;
+  border: 1px solid #d9e1ea !important;
+  background: var(--app-bg) !important;
+  color: var(--app-card-text) !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-text-fill-color: var(--app-card-text) !important;
+}
+
+:host ::ng-deep input[pinputtext]::placeholder,
+:host ::ng-deep input.p-inputtext::placeholder,
+:host ::ng-deep .p-inputtext::placeholder {
+  color: var(--app-card-text) !important;
+  opacity: 1 !important;
+}
+
+:host ::ng-deep input[pinputtext]:focus,
+:host ::ng-deep input.p-inputtext:focus,
+:host ::ng-deep .p-inputtext:focus {
+  border-color: var(--app-primary) !important;
+  background:var(--app-bg)  !important;
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--app-primary) 14%, transparent) !important;
+}
+
+:host ::ng-deep input[pinputtext]:-webkit-autofill,
+:host ::ng-deep input[pinputtext]:-webkit-autofill:hover,
+:host ::ng-deep input[pinputtext]:-webkit-autofill:focus,
+:host ::ng-deep input.p-inputtext:-webkit-autofill,
+:host ::ng-deep input.p-inputtext:-webkit-autofill:hover,
+:host ::ng-deep input.p-inputtext:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+  box-shadow: 0 0 0 1000px #f8fafc inset !important;
+}
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+:host ::ng-deep .filter-action-button.p-button {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 1rem !important;
+  border-radius: 0.9rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+:host ::ng-deep .filter-action-button--primary.p-button {
+  background: var(--app-primary) !important;
+  border-color: var(--app-primary) !important;
+  color: var(--app-primary-contrast) !important;
+}
+
+:host ::ng-deep .filter-action-button--primary.p-button:hover {
+  filter: brightness(0.96);
+}
+
+:host ::ng-deep .filter-action-button--secondary.p-button {
+  background: transparent !important;
+  border-color: var(--app-card-border) !important;
+  color: var(--app-card-text) !important;
+}
+
+:host ::ng-deep .filter-action-button--secondary.p-button:hover {
+  background: var(--app-hover) !important;
+}
+
+.strong {
+  font-weight: 600;
+  color: var(--app-card-text);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 1rem 0;
+  color: var(--app-card-muted);
+}
+
+:host ::ng-deep .p-datatable {
+  background: transparent !important;
+}
+
+:host ::ng-deep .p-datatable-wrapper {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+:host ::ng-deep .p-datatable-thead > tr > th {
+  background: var(--app-surface-2) !important;
+  color: var(--app-card-text) !important;
+  border-color: var(--app-card-border) !important;
+  font-weight: 700;
+}
+
+:host ::ng-deep .p-datatable-tbody > tr {
+  background: var(--app-card-bg) !important;
+  color: var(--app-card-text) !important;
+}
+
+:host ::ng-deep .p-datatable-tbody > tr:hover {
+  background: var(--app-hover) !important;
+}
+
+:host ::ng-deep .p-datatable-tbody > tr > td {
+  border-color: var(--app-card-border) !important;
+}
+
+:host ::ng-deep .p-paginator {
+  background: transparent !important;
+  border: none !important;
+  padding-top: 1rem;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-page,
+:host ::ng-deep .p-paginator .p-paginator-next,
+:host ::ng-deep .p-paginator .p-paginator-prev,
+:host ::ng-deep .p-paginator .p-paginator-first,
+:host ::ng-deep .p-paginator .p-paginator-last {
+  color: var(--app-card-text) !important;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-page.p-highlight {
+  background: color-mix(in srgb, var(--app-primary) 14%, var(--app-card-bg)) !important;
+  color: var(--app-primary) !important;
+  border-radius: 999px;
+}
+
+@media (max-width: 1100px) {
+  .kpi-grid,
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  :host ::ng-deep .filter-action-button.p-button {
+    flex: 1;
+  }
+}
